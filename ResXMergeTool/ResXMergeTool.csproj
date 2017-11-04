@@ -59,8 +59,8 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResXConflictNode.cs" />
-    <Compile Include="ResXSourceNode.cs" />
+    <Compile Include="Class\ResXConflictNode.cs" />
+    <Compile Include="Class\ResXSourceNode.cs" />
     <EmbeddedResource Include="frmResXDifferences.resx">
       <DependentUpon>frmResXDifferences.cs</DependentUpon>
     </EmbeddedResource>

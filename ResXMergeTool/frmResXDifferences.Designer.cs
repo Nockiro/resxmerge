@@ -57,7 +57,7 @@
             this.dgv.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgv.Location = new System.Drawing.Point(0, 0);
             this.dgv.Name = "dgv";
-            this.dgv.Size = new System.Drawing.Size(808, 573);
+            this.dgv.Size = new System.Drawing.Size(1248, 573);
             this.dgv.TabIndex = 1;
             this.dgv.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgv_CellFormatting);
             this.dgv.DefaultValuesNeeded += new System.Windows.Forms.DataGridViewRowEventHandler(this.dgv_DefaultValuesNeeded);
@@ -103,7 +103,7 @@
             this.pnl.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnl.Location = new System.Drawing.Point(0, 573);
             this.pnl.Name = "pnl";
-            this.pnl.Size = new System.Drawing.Size(808, 29);
+            this.pnl.Size = new System.Drawing.Size(1248, 29);
             this.pnl.TabIndex = 2;
             // 
             // chkAutoRemoveBaseOnly
@@ -130,7 +130,7 @@
             // btnSave
             // 
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(649, 3);
+            this.btnSave.Location = new System.Drawing.Point(1089, 3);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 0;
@@ -141,7 +141,7 @@
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(730, 3);
+            this.btnCancel.Location = new System.Drawing.Point(1170, 3);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 0;
@@ -159,7 +159,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(808, 602);
+            this.ClientSize = new System.Drawing.Size(1248, 602);
             this.Controls.Add(this.dgv);
             this.Controls.Add(this.pnl);
             this.Name = "frmResXDifferences";

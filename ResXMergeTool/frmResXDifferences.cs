@@ -97,7 +97,7 @@ namespace ResXMergeTool
                     dgv.EndEdit();
                 dgv.Sort(colKey, ListSortDirection.Ascending);
 
-                resX = new ResXResourceWriter(System.IO.Path.Combine(mstrPath, Environment.GetCommandLineArgs()[5]));
+                resX = new ResXResourceWriter(Path.Combine(mstrPath, Environment.GetCommandLineArgs()[5]));
 
                 for (int i = 0; i <= dgv.RowCount - 1; i++)
                 {
@@ -318,22 +318,21 @@ namespace ResXMergeTool
 
             try
             {
-                if (file.Contains(".resx"))
+                // get relative or absolute file path (as proposed by https://www.codeproject.com/Messages/5323362/Some-fixes.aspx)
+                file = Path.Combine(mstrPath, file);
+
+
+                if (file.Contains(".resx", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (file.Contains("base"))
+                    if (file.Contains("base", StringComparison.OrdinalIgnoreCase))
                         rSource = ResXSource.BASE;
-                    else if (file.Contains("local"))
+                    else if (file.Contains("local", StringComparison.OrdinalIgnoreCase))
                         rSource = ResXSource.LOCAL;
-                    else if(file.Contains("remote"))
+                    else if(file.Contains("remote", StringComparison.OrdinalIgnoreCase))
                         rSource = ResXSource.REMOTE;
                 }
                 else return;
-
-
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(file));
-                if (bw.CancellationPending)
-                    return;
-
+                
                 ResXResourceReader resx = new ResXResourceReader(file);
                 if (bw.CancellationPending)
                     return;
@@ -357,6 +356,7 @@ namespace ResXMergeTool
                     {
                         if (bw.CancellationPending)
                             return;
+
                         switch (rSource)
                         {
                             case ResXSource.BASE:

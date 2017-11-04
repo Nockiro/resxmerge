@@ -318,28 +318,19 @@ namespace ResXMergeTool
 
             try
             {
-                string ext = System.IO.Path.GetExtension(file).ToLower();
-                switch (ext)
+                if (file.Contains(".resx"))
                 {
-                    case ".resx":
-                        switch (System.IO.Path.GetExtension(System.IO.Path.GetFileNameWithoutExtension(file)).ToLower())
-                        {
-                            case ".base":
-                                rSource = ResXSource.BASE;
-                                break;
-                            case ".local":
-                                rSource = ResXSource.LOCAL;
-                                break;
-                            case ".remote":
-                                rSource = ResXSource.REMOTE;
-                                break;
-                            default:
-                                return;
-                        }
-                        break;
+                    if (file.Contains("base"))
+                        rSource = ResXSource.BASE;
+                    else if (file.Contains("local"))
+                        rSource = ResXSource.LOCAL;
+                    else if(file.Contains("remote"))
+                        rSource = ResXSource.REMOTE;
                 }
+                else return;
 
-                System.IO.Directory.SetCurrentDirectory(System.IO.Path.GetDirectoryName(file));
+
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(file));
                 if (bw.CancellationPending)
                     return;
 

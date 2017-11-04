@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Resources;
 using System.Windows.Forms;
 
@@ -44,6 +45,7 @@ namespace ResXMergeTool
                 if (bw.CancellationPending) return;
                 rows.Add(AddRow(n.Node.Name, n.Node.GetValue((ITypeResolutionService)null), n.Node.Comment, GetSourceString(n.Source), n.Source));
             }
+
             foreach (ResXConflictNode n in mConflicts.Values)
             {
                 if (bw.CancellationPending) return;
@@ -66,7 +68,7 @@ namespace ResXMergeTool
         #region Cancel
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            StartKDIFF3();
+            StartExternalMergeTool();
         }
         #endregion
 
@@ -152,7 +154,7 @@ namespace ResXMergeTool
             }
 
         }
-        
+
         private void dgv_DefaultValuesNeeded(object sender, DataGridViewRowEventArgs e)
         {
             e.Row.Cells[colComment.Index].Value = String.Empty;
@@ -184,7 +186,7 @@ namespace ResXMergeTool
         #region Form
         public frmResXDifferences()
         {
-            InitializeComponent();            
+            InitializeComponent();
             chkAutoRemoveBaseOnly.Checked = Properties.Settings.Default.AutoRemoveBaseOnly;
         }
 
@@ -193,7 +195,7 @@ namespace ResXMergeTool
 
             if (Environment.GetCommandLineArgs().Length != 6 || !Environment.GetCommandLineArgs()[5].ToLower().EndsWith(".resx"))
             {
-                StartKDIFF3();
+                StartExternalMergeTool();
             }
             else
             {
@@ -293,16 +295,16 @@ namespace ResXMergeTool
 
             switch (source)
             {
-                case ResXSource.ALL:            return "ALL";
-                case ResXSource.BASE:           return "BASE";
-                case ResXSource.CONFLICT:       return "XCONFLICT";
-                case ResXSource.BASE_LOCAL:     return "LOCAL";
-                case ResXSource.BASE_REMOTE:    return "REMOTE";
-                case ResXSource.LOCAL:          return "LOCAL ONLY";
-                case ResXSource.LOCAL_REMOTE:   return "BOTH";
-                case ResXSource.MANUAL:         return "MANUAL";
-                case ResXSource.REMOTE:         return "REMOTE ONLY";
-                default:                        return "????";
+                case ResXSource.ALL: return "ALL";
+                case ResXSource.BASE: return "BASE";
+                case ResXSource.CONFLICT: return "XCONFLICT";
+                case ResXSource.BASE_LOCAL: return "LOCAL";
+                case ResXSource.BASE_REMOTE: return "REMOTE";
+                case ResXSource.LOCAL: return "LOCAL ONLY";
+                case ResXSource.LOCAL_REMOTE: return "BOTH";
+                case ResXSource.MANUAL: return "MANUAL";
+                case ResXSource.REMOTE: return "REMOTE ONLY";
+                default: return "????";
             }
 
         }
@@ -340,13 +342,16 @@ namespace ResXMergeTool
                 System.IO.Directory.SetCurrentDirectory(System.IO.Path.GetDirectoryName(file));
                 if (bw.CancellationPending)
                     return;
+
                 ResXResourceReader resx = new ResXResourceReader(file);
                 if (bw.CancellationPending)
                     return;
+
                 resx.UseResXDataNodes = true;
                 IDictionaryEnumerator dict = resx.GetEnumerator();
                 if (bw.CancellationPending)
                     return;
+
                 while (dict.MoveNext())
                 {
                     if (bw.CancellationPending)
@@ -479,7 +484,7 @@ namespace ResXMergeTool
         #endregion
 
         #region Start KDIFF3
-        private void StartKDIFF3()
+        private void StartExternalMergeTool()
         {
             try
             {
@@ -494,20 +499,47 @@ namespace ResXMergeTool
             try
             {
                 this.Hide();
-                ProcessStartInfo pinfo = new ProcessStartInfo(System.IO.Path.Combine(System.IO.Directory.GetParent(Application.ExecutablePath).FullName, "kdiff3.exe"), Environment.CommandLine.Substring(Application.ExecutablePath.Length + 3));
-                pinfo.RedirectStandardOutput = true;
-                pinfo.UseShellExecute = false;
-
-                Process p = new Process();
-                p.StartInfo = pinfo;
-
-                p.Start();
-                System.IO.StreamWriter s = new System.IO.StreamWriter(Console.OpenStandardOutput());
-                while (!p.StandardOutput.EndOfStream)
+                // Check for KDIFF
+                if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "KDIFF3", "kdiff3.exe")))
                 {
-                    s.WriteLine(p.StandardOutput.ReadLine());
-                }
+                    ProcessStartInfo pinfo = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "KDIFF3", "kdiff3.exe"), Environment.CommandLine.Substring(Application.ExecutablePath.Length + 3));
+                    pinfo.RedirectStandardOutput = true;
+                    pinfo.UseShellExecute = false;
 
+                    Process p = new Process();
+                    p.StartInfo = pinfo;
+
+                    p.Start();
+                    StreamWriter s = new StreamWriter(Console.OpenStandardOutput());
+                    while (!p.StandardOutput.EndOfStream)
+                    {
+                        s.WriteLine(p.StandardOutput.ReadLine());
+                    }
+                   
+                }
+                else  // check for tortoisegit merge
+                {
+                    string[] args = Environment.GetCommandLineArgs();
+                    string param;
+                    if (args.Length == 4)
+                        param = $"/mine: { args[2] }/theirs: { args[3] }/base: { args[1] } ";
+                    else
+                        param = $"/mine: { args[1] }/theirs:{ args[2] } ";
+
+                    ProcessStartInfo pinfo = new ProcessStartInfo("tortoisegitmerge.exe", param);
+                    pinfo.RedirectStandardOutput = true;
+                    pinfo.UseShellExecute = false;
+
+                    Process p = new Process();
+                    p.StartInfo = pinfo;
+
+                    p.Start();
+                    StreamWriter s = new StreamWriter(Console.OpenStandardOutput());
+                    while (!p.StandardOutput.EndOfStream)
+                    {
+                        s.WriteLine(p.StandardOutput.ReadLine());
+                    }
+                }
             }
             catch (Exception)
             {

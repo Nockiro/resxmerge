@@ -1,10 +1,10 @@
 The Code Project Open License (CPOL) 1.02
 
 This repository was originally cloned from:
+https://www.codeproject.com/Articles/1145375/ResX-Merge-Tool (Revision of 24/10/16)
+and was modified by Robin Freund
 
-https://www.codeproject.com/Articles/1145375/ResX-Merge-Tool
-
-This code is distributed under the following CPOL license (taken from https://www.codeproject.com/info/cpol10.aspx on 04/11/2017)
+This code is distributed under the following Code Project Open License (taken from https://www.codeproject.com/info/cpol10.aspx on 26/04/2018)
 
 ## Preamble
 
@@ -18,7 +18,7 @@ The main points subject to the terms of the License are:
 * Source Code can be modified to create derivative works.
 * No claim of suitability, guarantee, or any warranty whatsoever is provided. The software is provided "as-is".
 * The Article(s) accompanying the Work may not be distributed or republished without the Author's consent
-* This License is entered between You, the individual or other entity reading or otherwise making use of the Work licensed pursuant to this License and the individual or other entity which offers the Work under the terms of this License ("Author").
+This License is entered between You, the individual or other entity reading or otherwise making use of the Work licensed pursuant to this License and the individual or other entity which offers the Work under the terms of this License ("Author").
 
 ## License
 

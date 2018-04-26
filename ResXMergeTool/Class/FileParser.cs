@@ -46,6 +46,11 @@ namespace ResXMergeTool
             else return ResXSourceType.UNKOWN;
         }
 
+        /// <summary>
+        /// Parses all given files and compares them with other read files
+        /// Code by B.O.B. (https://www.codeproject.com/script/Membership/View.aspx?mid=3598385) under CPOL License (http://www.codeproject.com/info/cpol10.aspx)
+        /// </summary>
+        /// <param name="files"></param>
         public void ParseResXFiles(params string[] files)
         {
             foreach (String fileName in files)

@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Resources;
 using System.Windows.Forms;
 
@@ -12,44 +13,36 @@ namespace ResXMergeTool
 {
     public partial class FrmResXDifferences : Form
     {
-        String SavePath = "";
         String[] FilesToDiff;
 
-        #region Event Handlers
-
-        #region Form
-        public FrmResXDifferences(String[] diffFiles, String savePath)
+        public FrmResXDifferences(String[] filesToDiff = null)
         {
             InitializeComponent();
+
             chkAutoRemoveBaseOnly.Checked = Properties.Settings.Default.AutoRemoveBaseOnly;
-            FilesToDiff = diffFiles;
-            SavePath = savePath;
-        }
 
-        private void frmResXDifferences_Load(object sender, EventArgs e)
-        {
+            if (filesToDiff != null)
+            {
+                FilesToDiff = filesToDiff;
                 bw.RunWorkerAsync();
-
+            }
+            else btn_addFiles_Click(null, null);
         }
-        #endregion
 
         #region Background Worker
-        private void bw_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
-            List<DataGridViewRow> rows = new List<DataGridViewRow>(10000);
+            List<DataGridViewRow> rows = new List<DataGridViewRow>();
 
             EnableControls(false);
 
-            //TOOD: Variable instead of current directory
             try
             {
                 FileParser fileParser = new FileParser(Directory.GetCurrentDirectory());
                 fileParser.ParseResXFiles(FilesToDiff);
 
                 foreach (ResXSourceNode n in fileParser.OriginNodes.Values)
-                {
                     rows.Add(AddRow(n.Node.Name, n.Node.GetValue((ITypeResolutionService)null), n.Node.Comment, ResXSourceNode.GetStringFromEnum(n.Source), n.Source));
-                }
 
                 foreach (ResXConflictNode n in fileParser.NodeConflicts.Values)
                 {
@@ -73,59 +66,98 @@ namespace ResXMergeTool
         }
         #endregion
 
+        #region Event Handlers
         #region Buttons
         private void btnCancel_Click(object sender, EventArgs e) => Program.StartExternalMergeTool();
-        
-        private void btnRestart_Click(object sender, EventArgs e)
-        {
-            dgv.Rows.Clear();
-            bw.RunWorkerAsync();
 
+        private void btnRestart_Click(object sender, EventArgs e) => reInitDGV();
+
+        private void btn_deleteEntry_Click(object sender, EventArgs e)
+        {
+            foreach (DataGridViewRow item in dgv.SelectedRows)
+                if (!item.IsNewRow)
+                    dgv.Rows.RemoveAt(item.Index);
+        }
+
+        private void btn_addFiles_Click(object sender, EventArgs e)
+        {
+            Dictionary<ResXSourceType, String> chosenFiles = new Dictionary<ResXSourceType, string>();
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Multiselect = true;
+                ofd.Title = "Select all compared files";
+
+                ofd.ShowDialog();
+                foreach (String filePath in ofd.FileNames)
+                {
+                    ResXSourceType sourceType = FileParser.GetResXSourceTypeFromFileName(filePath);
+                    if (chosenFiles.ContainsKey(sourceType))
+                        chosenFiles[sourceType] = filePath;
+                    else
+                        chosenFiles.Add(sourceType, filePath);
+                }
+            }
+            FilesToDiff = chosenFiles.Values.ToArray();
+
+            if (FilesToDiff?.Length > 0) reInitDGV();
         }
 
         #region Save
         private void btnSave_Click(object sender, EventArgs e)
         {
-            ResXResourceWriter resX = null;
-
-
             EnableControls(false);
-            dgv.Cursor = Cursors.WaitCursor;
-
-            try
+            using (SaveFileDialog sfd = new SaveFileDialog())
             {
-                if (dgv.IsCurrentCellDirty | dgv.IsCurrentRowDirty)
-                    dgv.EndEdit();
-                dgv.Sort(colKey, ListSortDirection.Ascending);
+                if (FilesToDiff?.Length > 0)
+                    sfd.InitialDirectory = Path.GetDirectoryName(FilesToDiff[0]);
 
-                resX = new ResXResourceWriter(Path.Combine(Directory.GetCurrentDirectory(), SavePath));
+                sfd.Filter = "Resource files|*.resx|All files|*.*";
+                sfd.ShowDialog();
 
-                for (int i = 0; i <= dgv.RowCount - 1; i++)
+                if (sfd.FileName != "")
                 {
-                    if (dgv.Rows[i].IsNewRow)
-                        continue;
-                    if (chkAutoRemoveBaseOnly.Checked && ((ResXSourceType)dgv.Rows[i].Cells[colSourceVal.Index].Value) == ResXSourceType.BASE)
-                        continue;
+                    String savePath = sfd.FileName;
+                    dgv.Cursor = Cursors.WaitCursor;
 
-                    ResXDataNode n = new ResXDataNode(Convert.ToString(dgv[colKey.Index, i].Value), dgv[colValue.Index, i].Value);
-                    n.Comment = Convert.ToString(dgv[colComment.Index, i].Value);
-                    resX.AddResource(n);
+                    try
+                    {
+                        if (dgv.IsCurrentCellDirty | dgv.IsCurrentRowDirty)
+                            dgv.EndEdit();
+
+                        dgv.Sort(colKey, ListSortDirection.Ascending);
+
+                        ResXResourceWriter resX = new ResXResourceWriter(Path.Combine(Directory.GetCurrentDirectory(), savePath));
+
+                        for (int i = 0; i <= dgv.RowCount - 1; i++)
+                        {
+                            if (dgv.Rows[i].IsNewRow)
+                                continue;
+                            if (chkAutoRemoveBaseOnly.Checked && ((ResXSourceType)dgv.Rows[i].Cells[colSourceVal.Index].Value) == ResXSourceType.BASE)
+                                continue;
+
+                            ResXDataNode n = new ResXDataNode(Convert.ToString(dgv[colKey.Index, i].Value), dgv[colValue.Index, i].Value)
+                            {
+                                Comment = Convert.ToString(dgv[colComment.Index, i].Value)
+                            };
+                            resX.AddResource(n);
+                        }
+                        resX.Generate();
+                        resX.Close();
+
+                        Properties.Settings.Default.AutoRemoveBaseOnly = chkAutoRemoveBaseOnly.Checked;
+                        Properties.Settings.Default.Save();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"The ResX file '{savePath}' failed to save properly: " + ex.Message);
+                    }
                 }
-                resX.Generate();
-                resX.Close();
-
-                Properties.Settings.Default.AutoRemoveBaseOnly = chkAutoRemoveBaseOnly.Checked;
-                Properties.Settings.Default.Save();
-                Application.Exit();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("The ResX file '" + Environment.GetCommandLineArgs()[5] + "' failed to save properly: " + ex.Message);
-                EnableControls(true);
-            }
-
+            EnableControls(true);
         }
         #endregion
+
+        private void lbl_caption_Click(object sender, EventArgs e) => Process.Start("https://github.com/Nockiro/resxmerge");
         #endregion
 
         #region Data Grid View
@@ -182,8 +214,14 @@ namespace ResXMergeTool
             }
 
         }
+
+        private void dgv_RowStateChanged(object sender, DataGridViewRowStateChangedEventArgs e)
+        {
+            btn_deleteEntry.Enabled = e.StateChanged == DataGridViewElementStates.Selected;
+            btn_deleteEntry.Text = dgv.SelectedRows.Count > 1 ? "Delete entries" : "Delete entry";
+        }
         #endregion
-             
+
         #endregion
 
         #region Functions
@@ -195,25 +233,11 @@ namespace ResXMergeTool
             try
             {
                 if (dgv.InvokeRequired)
-                {
-                    return (DataGridViewRow)dgv.Invoke(new delAddRow(AddRow), new object[] {
-                    key,
-                    value,
-                    comment,
-                    source,
-                    sourceV
-                });
-                }
+                    return (DataGridViewRow)dgv.Invoke(new delAddRow(AddRow), new object[] { key, value, comment, source, sourceV });
                 else
                 {
                     DataGridViewRow r = new DataGridViewRow();
-                    r.CreateCells(dgv, new object[] {
-                    key,
-                    value,
-                    comment,
-                    source,
-                    sourceV
-                });
+                    r.CreateCells(dgv, new object[] { key, value, comment, source, sourceV });
                     return r;
                 }
             }
@@ -232,13 +256,9 @@ namespace ResXMergeTool
             try
             {
                 if (dgv.InvokeRequired)
-                {
                     dgv.Invoke(new delAddRows(AddRows), new object[] { rows });
-                }
                 else
-                {
                     dgv.Rows.AddRange(rows.ToArray());
-                }
 
             }
             catch (Exception)
@@ -255,20 +275,24 @@ namespace ResXMergeTool
         private void EnableControls(bool enable)
         {
             if (InvokeRequired)
-            {
                 Invoke(new delEnableControls(EnableControls), enable);
-            }
             else
-            {
-                dgv.Enabled = enable;
-                btnRestart.Enabled = enable;
-                btnSave.Enabled = enable;
-            }
+                dgv.Enabled = btn_addFiles.Enabled = btn_reread.Enabled = btn_saveOutput.Enabled = btn_reread.Enabled = enable;
 
         }
         #endregion
 
+        #region Reinitialize datagrid
+
+        private void reInitDGV()
+        {
+            dgv.Rows.Clear();
+            bw.RunWorkerAsync();
+        }
+        #endregion
 
         #endregion
+
+
     }
 }

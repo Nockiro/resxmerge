@@ -26,7 +26,15 @@ namespace ResXMergeTool
                 Console.WriteLine("Starting GUI.. Don't close this window until you're done!");
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new FrmMain());
+
+                FrmResXDifferences frmDiff;
+                // if it's no GUI, the basic checks for correct parameters were already done in Program.cs
+                if (Program.CmdLineParametersUsed)
+                    frmDiff = new FrmResXDifferences(new String[] { Environment.GetCommandLineArgs()[1], Environment.GetCommandLineArgs()[2], Environment.GetCommandLineArgs()[3] });
+                else
+                    frmDiff = new FrmResXDifferences();
+
+                Application.Run(frmDiff);
             }
         }
 
@@ -46,12 +54,16 @@ namespace ResXMergeTool
                 // Check for KDIFF
                 if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "KDIFF3", "kdiff3.exe")))
                 {
-                    ProcessStartInfo pinfo = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "KDIFF3", "kdiff3.exe"), Environment.CommandLine.Substring(Application.ExecutablePath.Length + 3));
-                    pinfo.RedirectStandardOutput = true;
-                    pinfo.UseShellExecute = false;
+                    ProcessStartInfo pinfo = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "KDIFF3", "kdiff3.exe"), Environment.CommandLine.Substring(Application.ExecutablePath.Length + 3))
+                    {
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false
+                    };
 
-                    Process p = new Process();
-                    p.StartInfo = pinfo;
+                    Process p = new Process
+                    {
+                        StartInfo = pinfo
+                    };
 
                     p.Start();
                     StreamWriter s = new StreamWriter(Console.OpenStandardOutput());
@@ -70,12 +82,16 @@ namespace ResXMergeTool
                     else
                         param = $"/mine: { args[1] }/theirs:{ args[2] } ";
 
-                    ProcessStartInfo pinfo = new ProcessStartInfo("tortoisegitmerge.exe", param);
-                    pinfo.RedirectStandardOutput = true;
-                    pinfo.UseShellExecute = false;
+                    ProcessStartInfo pinfo = new ProcessStartInfo("tortoisegitmerge.exe", param)
+                    {
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false
+                    };
 
-                    Process p = new Process();
-                    p.StartInfo = pinfo;
+                    Process p = new Process
+                    {
+                        StartInfo = pinfo
+                    };
 
                     p.Start();
                     StreamWriter s = new StreamWriter(Console.OpenStandardOutput());

@@ -15,14 +15,11 @@ namespace ResXMergeTool
 
         public SortedList<string, ResXConflictNode> NodeConflicts
         {
-            get
-            {
-                return new SortedList<string, ResXConflictNode>(mConflicts);
-            }
+            get => new SortedList<string, ResXConflictNode>(mConflicts);
         }
         public SortedList<string, ResXSourceNode> OriginNodes
         {
-            get { return new SortedList<string, ResXSourceNode>(mOutput); }
+            get => new SortedList<string, ResXSourceNode>(mOutput);
         }
 
         public FileParser(string path)
@@ -65,16 +62,17 @@ namespace ResXMergeTool
                 if (rSource == ResXSourceType.UNKOWN)
                     return;
 
-                ResXResourceReader resx = new ResXResourceReader(file);
+                ResXResourceReader resx = new ResXResourceReader(file)
+                {
+                    UseResXDataNodes = true
+                };
 
-                resx.UseResXDataNodes = true;
                 IDictionaryEnumerator dict = resx.GetEnumerator();
 
 
                 while (dict.MoveNext())
                 {
                     ResXDataNode node = (ResXDataNode)dict.Value;
-
                     name = node.Name.ToLower();
 
                     if (mConflicts.ContainsKey(name))
@@ -99,12 +97,9 @@ namespace ResXMergeTool
                     {
                         if (mOutput.ContainsKey(name))
                         {
-
-                            object objA = null;
-                            object objB = null;
+                            object objA = mOutput[name].Node.GetValue((ITypeResolutionService)null);
+                            object objB = node.GetValue((ITypeResolutionService)null);
                             bool objE = false;
-                            objA = mOutput[name].Node.GetValue((ITypeResolutionService)null);
-                            objB = node.GetValue((ITypeResolutionService)null);
 
                             objE = string.Equals(objA.GetType().ToString(), objB.GetType().ToString());
                             if (objE && objA is string)

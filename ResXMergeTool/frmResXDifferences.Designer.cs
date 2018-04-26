@@ -1,6 +1,6 @@
 ﻿namespace ResXMergeTool
 {
-    partial class frmResXDifferences
+    partial class FrmResXDifferences
     {
         /// <summary>
         /// Required designer variable.
@@ -109,7 +109,7 @@
             // chkAutoRemoveBaseOnly
             // 
             this.chkAutoRemoveBaseOnly.AutoSize = true;
-            this.chkAutoRemoveBaseOnly.Location = new System.Drawing.Point(84, 7);
+            this.chkAutoRemoveBaseOnly.Location = new System.Drawing.Point(206, 7);
             this.chkAutoRemoveBaseOnly.Name = "chkAutoRemoveBaseOnly";
             this.chkAutoRemoveBaseOnly.Size = new System.Drawing.Size(268, 17);
             this.chkAutoRemoveBaseOnly.TabIndex = 2;
@@ -155,14 +155,14 @@
             this.bw.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bw_DoWork);
             this.bw.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bw_RunWorkerCompleted);
             // 
-            // frmResXDifferences
+            // FrmResXDifferences
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1248, 602);
             this.Controls.Add(this.dgv);
             this.Controls.Add(this.pnl);
-            this.Name = "frmResXDifferences";
+            this.Name = "FrmResXDifferences";
             this.Text = "ResX Differences";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.frmResXDifferences_Load);

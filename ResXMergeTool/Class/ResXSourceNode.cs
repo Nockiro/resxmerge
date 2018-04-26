@@ -4,8 +4,9 @@ using System.Resources;
 namespace ResXMergeTool
 {
     [Flags()]
-    public enum ResXSource
+    public enum ResXSourceType
     {
+        UNKOWN = -1,
         CONFLICT = 0,
         BASE = 1,
         LOCAL = 2,
@@ -18,13 +19,32 @@ namespace ResXMergeTool
     }
     public class ResXSourceNode
     {
-        public ResXSource Source;
+        public ResXSourceType Source;
 
         public ResXDataNode Node;
-        public ResXSourceNode(ResXSource source, ResXDataNode node)
+        public ResXSourceNode(ResXSourceType source, ResXDataNode node)
         {
             this.Source = source;
             this.Node = node;
+        }
+
+        public static string GetStringFromEnum(ResXSourceType source)
+        {
+
+            switch (source)
+            {
+                case ResXSourceType.ALL: return "ALL";
+                case ResXSourceType.BASE: return "BASE";
+                case ResXSourceType.CONFLICT: return "XCONFLICT";
+                case ResXSourceType.BASE_LOCAL: return "LOCAL";
+                case ResXSourceType.BASE_REMOTE: return "REMOTE";
+                case ResXSourceType.LOCAL: return "LOCAL ONLY";
+                case ResXSourceType.LOCAL_REMOTE: return "BOTH";
+                case ResXSourceType.MANUAL: return "MANUAL";
+                case ResXSourceType.REMOTE: return "REMOTE ONLY";
+                default: return "????";
+            }
+
         }
     }
 }
